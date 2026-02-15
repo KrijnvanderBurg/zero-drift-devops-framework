@@ -1,0 +1,92 @@
+name: Ansible Deployment Stage
+
+on:
+  workflow_call:
+    inputs:
+      working_directory:
+        description: Path to the Ansible project directory (e.g., ./01-onprem/01-base-infra)
+        required: true
+        type: string
+      inventory:
+        description: Relative path to the inventory directory (e.g., inventories/dev)
+        required: true
+        type: string
+      artifact_name:
+        description: Name for artifacts and display (e.g., op-base-infra-dev)
+        required: true
+        type: string
+      environment:
+        description: GitHub environment for deployments (dev, prod)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  CHECK_OUTPUT_FILENAME: check-output.txt
+  APPLY_OUTPUT_FILENAME: apply-output.txt
+
+jobs:
+  deploy:
+    name: Lint, Check & Apply
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Ansible
+        uses: ./.github/actions/ansible-install
+
+      - name: Install Galaxy requirements
+        uses: ./.github/actions/ansible-galaxy-install
+        with:
+          working_directory: ${{ inputs.working_directory }}
+
+      - name: Ansible lint
+        uses: ./.github/actions/ansible-lint
+        with:
+          working_directory: ${{ inputs.working_directory }}
+
+      - name: Ansible check (dry-run)
+        id: check
+        uses: ./.github/actions/ansible-playbook
+        with:
+          working_directory: ${{ inputs.working_directory }}
+          inventory: ${{ inputs.inventory }}
+          mode: check
+          output_file: ${{ runner.temp }}/${{ inputs.artifact_name }}-${{ env.CHECK_OUTPUT_FILENAME }}
+          vault_password: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+
+      - name: Post check output to PR
+        if: github.event_name == 'pull_request'
+        uses: ./.github/actions/ansible-playbook-comment
+        with:
+          output_file: ${{ runner.temp }}/${{ inputs.artifact_name }}-${{ env.CHECK_OUTPUT_FILENAME }}
+          artifact_name: "${{ inputs.artifact_name }} (check)"
+          working_directory: ${{ inputs.working_directory }}
+          status: ${{ steps.check.outcome }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Ansible apply
+        id: apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: ./.github/actions/ansible-playbook
+        with:
+          working_directory: ${{ inputs.working_directory }}
+          inventory: ${{ inputs.inventory }}
+          mode: apply
+          output_file: ${{ runner.temp }}/${{ inputs.artifact_name }}-${{ env.APPLY_OUTPUT_FILENAME }}
+          vault_password: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+
+      - name: Post apply result to PR
+        if: always() && github.event_name == 'pull_request' && steps.apply.outcome != 'skipped'
+        uses: ./.github/actions/ansible-playbook-comment
+        with:
+          output_file: ${{ runner.temp }}/${{ inputs.artifact_name }}-${{ env.APPLY_OUTPUT_FILENAME }}
+          artifact_name: "${{ inputs.artifact_name }} (apply)"
+          working_directory: ${{ inputs.working_directory }}
+          status: ${{ steps.apply.outcome }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}

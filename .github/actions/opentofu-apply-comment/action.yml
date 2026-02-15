@@ -1,0 +1,58 @@
+name: OpenTofu Apply Comment
+description: Post OpenTofu apply output as a comment on the merged PR
+
+inputs:
+  apply_output_file:
+    description: Absolute path to the apply output file
+    required: true
+  environment:
+    description: Target environment name (e.g. dev, staging, prod)
+    required: true
+  working_directory:
+    description: Path to OpenTofu configuration directory (for display purposes)
+    required: true
+  apply_status:
+    description: Status of the apply (success or failure)
+    required: false
+    default: success
+  github_token:
+    description: GitHub token for API calls
+    required: true
+
+outputs:
+  pr_number:
+    description: The PR number that was commented on
+    value: ${{ github.event.pull_request.number }}
+  comment_body:
+    description: The generated comment body
+    value: ${{ steps.comment.outputs.comment_body }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate comment body
+      id: comment
+      shell: bash
+      run: |
+        bash ${{ github.workspace }}/.github/scripts/opentofu-apply-comment.sh \
+          "${{ inputs.apply_output_file }}" \
+          "${{ inputs.environment }}" \
+          "${{ inputs.working_directory }}" \
+          "${{ inputs.apply_status }}"
+
+    - name: Find existing apply comment
+      id: find-comment
+      uses: peter-evans/find-comment@v3
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-author: github-actions[bot]
+        body-includes: "OpenTofu Apply - ${{ inputs.environment }}"
+
+    - name: Create or update comment
+      id: create-comment
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: ${{ steps.comment.outputs.comment_body }}
+        edit-mode: replace

@@ -1,0 +1,48 @@
+name: OpenTofu Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: opentofu-operations
+  cancel-in-progress: false
+
+jobs:
+  # ===== Example: Networking (dev) =====
+  # Deploys first since other resources depend on it.
+  networking-dev:
+    name: networking-dev
+    uses: ./.github/workflows/opentofu-deployment-template.yml
+    with:
+      working_directory: ./infra/networking/environments/dev
+      artifact_name: networking-dev
+      state_key: networking-dev.tfstate
+      client_id: 00000000-0000-0000-0000-000000000001 # replace with your SP client ID
+      environment: dev
+      state_storage_account: stexampletfstatedev01
+      state_resource_group: rg-tfstate-dev-01
+      state_container: tfstate
+
+  # ===== Example: Application (dev) =====
+  # Depends on networking being deployed first.
+  application-dev:
+    name: application-dev
+    needs: [networking-dev]
+    uses: ./.github/workflows/opentofu-deployment-template.yml
+    with:
+      working_directory: ./infra/application/environments/dev
+      artifact_name: application-dev
+      state_key: application-dev.tfstate
+      client_id: 00000000-0000-0000-0000-000000000002 # replace with your SP client ID
+      environment: dev
+      state_storage_account: stexampletfstatedev01
+      state_resource_group: rg-tfstate-dev-01
+      state_container: tfstate

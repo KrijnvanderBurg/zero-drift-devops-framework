@@ -1,0 +1,34 @@
+name: OpenTofu Init
+description: Initialize OpenTofu working directory and download providers
+
+inputs:
+  working_directory:
+    description: Path to the OpenTofu configuration directory
+    required: true
+  storage_account_name:
+    description: Azure Storage Account name for state backend
+    required: true
+  resource_group_name:
+    description: Azure Resource Group name for state backend
+    required: true
+  container_name:
+    description: Azure Storage Container name for state backend
+    required: true
+  state_key:
+    description: State file key for backend configuration
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: OpenTofu init
+      id: init
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      env:
+        STATE_KEY: ${{ inputs.state_key }}
+        STORAGE_ACCOUNT_NAME: ${{ inputs.storage_account_name }}
+        RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+        CONTAINER_NAME: ${{ inputs.container_name }}
+      run: |
+        bash ${{ github.workspace }}/.github/scripts/opentofu-init.sh

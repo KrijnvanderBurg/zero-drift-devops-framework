@@ -1,0 +1,16 @@
+name: OpenTofu Lint
+description: Lint and validate OpenTofu configuration files
+
+inputs:
+  working_directory:
+    description: Path to the OpenTofu configuration directory
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Lint OpenTofu configuration
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        bash ${{ github.workspace }}/.github/scripts/opentofu-lint.sh

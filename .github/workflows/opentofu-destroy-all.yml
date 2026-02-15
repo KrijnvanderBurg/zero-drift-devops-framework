@@ -1,0 +1,48 @@
+name: OpenTofu Destroy All
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Runs every day at 2:00 UTC
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: opentofu-operations
+  cancel-in-progress: false
+
+jobs:
+  # Destroy in reverse order of deployment
+  # because of dependencies and remote data objects that otherwise do not exist anymore.
+
+  # ===== Example: Application (dev) - destroy first =====
+  application-dev:
+    name: application-dev destroy
+    uses: ./.github/workflows/opentofu-destroy-template.yml
+    with:
+      working_directory: ./infra/application/environments/dev
+      artifact_name: application-dev
+      client_id: "00000000-0000-0000-0000-000000000002" # replace with your SP client ID
+      environment: dev
+      state_storage_account: stexampletfstatedev01
+      state_resource_group: rg-tfstate-dev-01
+      state_container: tfstate
+      state_key: application-dev.tfstate
+
+  # ===== Example: Networking (dev) - destroy last =====
+  networking-dev:
+    name: networking-dev destroy
+    needs: [application-dev]
+    uses: ./.github/workflows/opentofu-destroy-template.yml
+    with:
+      working_directory: ./infra/networking/environments/dev
+      artifact_name: networking-dev
+      client_id: "00000000-0000-0000-0000-000000000001" # replace with your SP client ID
+      environment: dev
+      state_storage_account: stexampletfstatedev01
+      state_resource_group: rg-tfstate-dev-01
+      state_container: tfstate
+      state_key: networking-dev.tfstate

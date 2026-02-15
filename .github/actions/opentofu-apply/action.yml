@@ -1,0 +1,31 @@
+name: OpenTofu Apply
+description: Apply OpenTofu configuration changes from a saved plan
+
+inputs:
+  working_directory:
+    description: Path to the OpenTofu configuration directory
+    required: true
+  plan_binary_file:
+    description: Absolute path to the binary plan file to apply
+    required: true
+  apply_output_file:
+    description: Absolute path to save the apply output (optional)
+    required: false
+    default: ''
+
+outputs:
+  apply_output_file:
+    description: Path to the apply output file (if specified)
+    value: ${{ steps.apply.outputs.apply_output_file }}
+
+runs:
+  using: composite
+  steps:
+    - name: Apply OpenTofu changes
+      id: apply
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        bash ${{ github.workspace }}/.github/scripts/opentofu-apply.sh \
+          ${{ inputs.plan_binary_file }} \
+          "${{ inputs.apply_output_file }}"

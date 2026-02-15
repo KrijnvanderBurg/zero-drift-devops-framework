@@ -1,0 +1,125 @@
+name: OpenTofu Deployment Stage
+
+on:
+  workflow_call:
+    inputs:
+      working_directory:
+        description: Path to the OpenTofu configuration directory
+        required: true
+        type: string
+      artifact_name:
+        description: Name for artifacts and display
+        required: true
+        type: string
+      state_key:
+        description: State file key for backend configuration
+        required: true
+        type: string
+      client_id:
+        description: Azure AD application client ID for OIDC authentication
+        required: true
+        type: string
+      environment:
+        description: GitHub environment for deployments (dev, prod)
+        required: true
+        type: string
+      tenant_id:
+        description: Azure AD tenant ID
+        required: false
+        type: string
+        default: "00000000-0000-0000-0000-000000000000" # replace with your tenant ID
+
+      # State backend configuration
+      state_storage_account:
+        description: Azure Storage Account name for state backend
+        required: true
+        type: string
+      state_resource_group:
+        description: Azure Resource Group name for state backend
+        required: true
+        type: string
+      state_container:
+        description: Azure Storage Container name for state backend
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+env:
+  ARM_CLIENT_ID: ${{ inputs.client_id }}
+  ARM_TENANT_ID: ${{ inputs.tenant_id }}
+  ARM_USE_OIDC: true
+  ARM_STORAGE_USE_AZUREAD: true
+  PLAN_BINARY_FILENAME: tfplan
+  PLAN_TEXT_FILENAME: tfplan.txt
+  APPLY_OUTPUT_FILENAME: apply-output.txt
+
+jobs:
+  deploy:
+    name: Lint, Plan & Apply
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Install OpenTofu
+        uses: ./.github/actions/opentofu-install
+
+      - name: OpenTofu init
+        uses: ./.github/actions/opentofu-init
+        with:
+          working_directory: ${{ inputs.working_directory }}
+          storage_account_name: ${{ inputs.state_storage_account }}
+          resource_group_name: ${{ inputs.state_resource_group }}
+          container_name: ${{ inputs.state_container }}
+          state_key: ${{ inputs.state_key }}
+
+      - name: OpenTofu lint
+        uses: ./.github/actions/opentofu-lint
+        with:
+          working_directory: ${{ inputs.working_directory }}
+
+      - name: OpenTofu plan
+        id: plan
+        uses: ./.github/actions/opentofu-plan
+        with:
+          working_directory: ${{ inputs.working_directory }}
+          plan_binary_file: ${{ runner.temp }}/${{ inputs.artifact_name }}-${{ env.PLAN_BINARY_FILENAME }}
+          plan_text_file: ${{ runner.temp }}/${{ inputs.artifact_name }}-${{ env.PLAN_TEXT_FILENAME }}
+
+      - name: Post Plan to PR
+        if: github.event_name == 'pull_request'
+        uses: ./.github/actions/opentofu-plan-comment
+        with:
+          plan_text_file: ${{ steps.plan.outputs.plan_text_file }}
+          environment: ${{ inputs.environment }}
+          working_directory: ${{ inputs.working_directory }}
+
+      - name: OpenTofu apply
+        id: apply
+        uses: ./.github/actions/opentofu-apply
+        with:
+          working_directory: ${{ inputs.working_directory }}
+          plan_binary_file: ${{ runner.temp }}/${{ inputs.artifact_name }}-${{ env.PLAN_BINARY_FILENAME }}
+          apply_output_file: ${{ runner.temp }}/${{ inputs.artifact_name }}-${{ env.APPLY_OUTPUT_FILENAME }}
+
+      - name: Post Apply Result to PR
+        if: always() && github.event_name == 'pull_request'
+        uses: ./.github/actions/opentofu-apply-comment
+        with:
+          environment: ${{ inputs.environment }}
+          apply_output_file: ${{ runner.temp }}/${{ inputs.artifact_name }}-${{ env.APPLY_OUTPUT_FILENAME }}
+          working_directory: ${{ inputs.working_directory }}
+          apply_status: ${{ steps.apply.outcome }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}

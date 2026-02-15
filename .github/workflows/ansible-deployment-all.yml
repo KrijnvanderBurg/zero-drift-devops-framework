@@ -1,0 +1,39 @@
+name: Ansible Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ansible-operations
+  cancel-in-progress: false
+
+jobs:
+  # ===== Example: Base Infrastructure (dev) =====
+  base-infra-dev:
+    name: base-infra-dev
+    uses: ./.github/workflows/ansible-deployment-template.yml
+    with:
+      working_directory: ./ansible/base-infra
+      inventory: inventories/dev
+      artifact_name: base-infra-dev
+      environment: dev
+    secrets: inherit
+
+  # ===== Example: Application (dev) =====
+  application-dev:
+    name: application-dev
+    needs: [base-infra-dev]
+    uses: ./.github/workflows/ansible-deployment-template.yml
+    with:
+      working_directory: ./ansible/application
+      inventory: inventories/dev
+      artifact_name: application-dev
+      environment: dev
+    secrets: inherit

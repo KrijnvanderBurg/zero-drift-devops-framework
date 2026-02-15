@@ -1,0 +1,16 @@
+name: Ansible Galaxy Install
+description: Install Ansible Galaxy collection and role dependencies
+
+inputs:
+  working_directory:
+    description: Path to the Ansible project directory containing requirements.yml
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install Galaxy requirements
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        bash ${{ github.workspace }}/.github/scripts/ansible-galaxy-install.sh

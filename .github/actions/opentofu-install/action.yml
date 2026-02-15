@@ -1,0 +1,9 @@
+name: OpenTofu Install
+description: Install OpenTofu CLI tool with caching support
+
+runs:
+  using: composite
+  steps:
+    - name: Install OpenTofu
+      shell: bash
+      run: bash ${{ github.action_path }}/../../scripts/opentofu-install.sh

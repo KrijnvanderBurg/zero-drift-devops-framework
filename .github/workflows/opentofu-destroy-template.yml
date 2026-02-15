@@ -1,0 +1,101 @@
+name: OpenTofu Destroy
+
+on:
+  workflow_call:
+    inputs:
+      working_directory:
+        description: Path to the OpenTofu configuration directory
+        required: true
+        type: string
+      artifact_name:
+        description: Name for artifacts and display
+        required: true
+        type: string
+      state_key:
+        description: State file key for backend configuration
+        required: true
+        type: string
+      client_id:
+        description: Azure AD application client ID for OIDC authentication
+        required: true
+        type: string
+      environment:
+        description: GitHub environment for deployments (dev, prod)
+        required: true
+        type: string
+      tenant_id:
+        description: Azure AD tenant ID
+        required: false
+        type: string
+        default: "00000000-0000-0000-0000-000000000000" # replace with your tenant ID
+
+      # State backend configuration
+      state_storage_account:
+        description: Azure Storage Account name for state backend
+        required: true
+        type: string
+      state_resource_group:
+        description: Azure Resource Group name for state backend
+        required: true
+        type: string
+      state_container:
+        description: Azure Storage Container name for state backend
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+env:
+  ARM_CLIENT_ID: ${{ inputs.client_id }}
+  ARM_TENANT_ID: ${{ inputs.tenant_id }}
+  ARM_USE_OIDC: true
+  ARM_STORAGE_USE_AZUREAD: true
+  DESTROY_OUTPUT_FILENAME: destroy-output.txt
+
+jobs:
+  destroy:
+    name: Destroy ${{ inputs.artifact_name }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ inputs.client_id }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Install OpenTofu
+        uses: ./.github/actions/opentofu-install
+
+      - name: OpenTofu init
+        uses: ./.github/actions/opentofu-init
+        with:
+          working_directory: ${{ inputs.working_directory }}
+          storage_account_name: ${{ inputs.state_storage_account }}
+          resource_group_name: ${{ inputs.state_resource_group }}
+          container_name: ${{ inputs.state_container }}
+          state_key: ${{ inputs.state_key }}
+
+      - name: OpenTofu destroy
+        id: destroy
+        uses: ./.github/actions/opentofu-destroy
+        with:
+          working_directory: ${{ inputs.working_directory }}
+
+      # Too many post-destroy comments can spam PRs; disable for now
+      # - name: Post Destroy Result to PR
+      #   if: always()
+      #   uses: ./.github/actions/opentofu-apply-comment
+      #   with:
+      #     apply_output_file: ${{ steps.destroy.outputs.destroy_output_file }}
+      #     environment: ${{ inputs.artifact_name }}
+      #     working_directory: ${{ inputs.working_directory }}
+      #     apply_status: ${{ steps.destroy.outcome }}
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}

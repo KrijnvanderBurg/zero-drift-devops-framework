@@ -20,17 +20,19 @@ Many DevOps setups frustrate and fail because they treat local development and C
 
 **This repository is an example implementation** that demonstrates a solution to this fundamental problem through a different architectural approach and repository structure: **perfect consistency everywhere**. It's not a tool or application itself, but rather a **working example** and **methodology showcase** that you can study, adapt, and copy for your own projects.
 
-### 🎯 The Core Innovation: Shared Configuration & Script Architecture
+### 🎯 The Core Innovation: CI/CD Provider as Configuration Source of Truth
 
-Instead of maintaining separate configurations for local and remote environments, this repository demonstrates a **single source of truth** approach through strategically designed submodules:
+Instead of maintaining separate configurations for local and remote environments, this repository demonstrates a **CI/CD provider ownership** approach:
 
 - **`.devcontainer/`** — Your local development environments with zero-configuration setup
-- **`.azuredevops/`** — Multi-tier CI/CD pipeline templates  
-- **`.dotfiles/`** — The secret sauce: shared tool configurations AND identical CLI scripts used by BOTH
+- **`.github/`** — GitHub Actions workflows with configs in `.github/configs/`
+- **`.azuredevops/`** — Multi-tier CI/CD pipeline templates with configs in `.azuredevops/configs/`
 
-Every linter, formatter, security scanner, testing tool, and more uses **exactly the same configuration files and CLI commands** whether running locally in your DevContainer or remotely in Azure Pipelines. When you run a quality check locally and it passes, you know with confidence it will pass in CI/CD too.
+Each CI/CD provider maintains its own tool configurations (linters, formatters, security scanners, etc.) as the source of truth. DevContainers reference `.github/configs/` to match GitHub Actions locally, ensuring **exactly the same configuration files and CLI scripts** whether running locally or in GitHub Actions.
 
-> **💡 Want the complete picture?** The [DevContainer README](https://github.com/KrijnvanderBurg/.devcontainer) has 10x more detail with step-by-step examples, configuration walkthroughs, and real-world usage patterns.
+> **💡 Git Submodule Alternative:** While this repository uses a **monorepo approach**, the **git submodule pattern** (sharing a single `.dotfiles/` submodule across all environments) is equally valid and widely used. Choose based on whether you prefer:
+> - **Monorepo**: Simpler management, per-provider flexibility, everything versioned together
+> - **Submodules**: True single-source-of-truth, share configs across multiple repositories
 
 ### 🚀 What You'll Take Away
 
@@ -43,6 +45,8 @@ This **example repository** demonstrates a **proven approach** for restructuring
 
 This isn't a tool to install—it's an **exploration and demonstration** of how modern DevOps consistency can be structured and work. **Copy what works, adapt what doesn't, and make it your own.**
 
+> **🏗️ Architecture Note:** This repository demonstrates a **monorepo approach** with CI/CD providers (`.azuredevops/configs/`, `.github/configs/`) as configuration sources of truth. The **git submodule approach** (using a shared `.dotfiles/` submodule) is equally valid for teams wanting true single-source-of-truth across multiple repositories.
+
 ### 🎯 What You Can Copy & Adapt
 
 ✅ **20+ Pre-configured Development Tools** - Study how Ruff, Pylint, Mypy, Bandit, Pytest work together seamlessly  
@@ -53,8 +57,6 @@ This isn't a tool to install—it's an **exploration and demonstration** of how 
 ✅ **Proven Repository Structure** - Apply the patterns tested in real development environments
 
 > **🚀 Ready for hands-on examples?** The [Azure DevOps Templates README](https://github.com/KrijnvanderBurg/.azuredevops) contains extensive documentation with real pipeline examples, parameter guides, and composition patterns.
-
-
 
 ## 🌟 Why This Approach Changes Your Way of Working
 
@@ -75,11 +77,11 @@ Atomic templates serve as idempotent building blocks that compose into higher-le
 > **⚙️ Go deeper into templates:** The [Azure DevOps Templates README](https://github.com/KrijnvanderBurg/.azuredevops) has comprehensive guides on atomic template design and composition patterns.
 
 ### Perfect Local-Remote Consistency
-The shared configuration architecture means your DevContainer runs `ruff --config .dotfiles/python/ruff.toml` and your Azure Pipeline runs the exact same command with the same config file. This transforms CI/CD from an unpredictable feedback mechanism into a reliable quality gate— when local checks pass, you can be confident about remote execution.
+The CI/CD provider configuration architecture means your DevContainer runs `ruff --config .github/configs/python/pyproject.toml` and your GitHub Actions run the exact same command with the same config file. This transforms CI/CD from an unpredictable feedback mechanism into a reliable quality gate— when local checks pass, you can be confident about remote execution.
 
-**Ready to dive deeper?** Explore the [DevContainer documentation](https://github.com/KrijnvanderBurg/.devcontainer) and [Azure DevOps templates documentation](https://github.com/KrijnvanderBurg/.azuredevops).
+**Ready to dive deeper?** Explore the Azure DevOps and GitHub configurations in `.azuredevops/configs/` and `.github/configs/` to see how this pattern works.
 
-> **🛠️ Master the configuration magic:** The [.dotfiles documentation](https://github.com/KrijnvanderBurg/.dotfiles) reveals how shared configurations work under the hood—complete with examples and advanced patterns.
+> **🛠️ Alternative Pattern:** Many teams use a **shared `.dotfiles/` git submodule** instead of per-provider configs. Both approaches achieve consistency - choose based on your versioning and repository structure preferences.
 
 
 
@@ -125,26 +127,30 @@ This example repository demonstrates promising DevOps patterns. You can study th
 ```bash
 git clone https://github.com/KrijnvanderBurg/DevOps-Toolkit.git
 cd DevOps-Toolkit
-git submodule update --init --recursive
 ```
-*The `--recursive` flag pulls the nested `.dotfiles` submodule that demonstrates how configuration consistency works.*
+*This is a monorepo - all configs and templates are in the repository.*
 
-**2. Experience the Patterns**
+**2. Experience Local Development with DevContainers**
 - Open VS Code → `F1` → "Dev Containers: Rebuild and Reopen in Container"  
 - Choose your environment (Python development, Spark cluster, or infrastructure)
-- Watch 20+ tools configure and run automatically to see the methodology in action
+- Watch 20+ tools configure and run automatically
+- Run linters, formatters, and tests locally - they use `.github/configs/` as source of truth
+- All checks pass? You're ready to push!
 
-**3. Study the CI/CD Templates**
-- Browse the `azure-pipelines.yml` and `.azuredevops/` templates
-- See how the same quality checks that run locally are orchestrated remotely
-- Copy the templates you need for your own projects
+**3. Commit, Push, and See CI/CD in Action**
+- Make your changes, commit, and push to your repository
+- Azure DevOps pipeline automatically runs using `.azuredevops/configs/` as source of truth
+- GitHub Actions workflow runs using `.github/configs/` as source of truth
+- Study how the same tools run remotely with CI/CD provider-specific configurations
+- Browse `azure-pipelines.yml` and `.azuredevops/` templates to understand the patterns
 
 ### � Copy What You Need
 
-**Ready to adapt these patterns?** Each component has extensive documentation showing you how to implement similar approaches in your projects:
+**Ready to adapt these patterns?** Each component demonstrates approaches you can implement in your own projects:
 
-- **[📦 DevContainers](https://github.com/KrijnvanderBurg/.devcontainer)** — Study the complete setup guides, tool configurations, and learn how to build your own consistent environments
-- **[🔄 Azure DevOps Templates](https://github.com/KrijnvanderBurg/.azuredevops)** — Copy from 25+ templates with parameter guides and composition patterns for your CI/CD needs  
-- **[🗂️ .dotfiles](https://github.com/KrijnvanderBurg/.dotfiles)** — Learn how shared configurations work and adapt the tool-specific setup patterns
+- **[📦 DevContainers](.devcontainer/)** — Study the complete setup guides and tool configurations for building consistent local environments
+- **[🔄 Azure DevOps Templates](.azuredevops/)** — Copy from 25+ templates with parameter guides and composition patterns for your CI/CD needs  
+- **[⚙️ GitHub Workflows](.github/workflows/)** — See workflow examples and reusable actions for GitHub Actions pipelines
+- **[🗂️ Configurations](.azuredevops/configs/ & .github/configs/)** — Learn how CI/CD provider configurations work and adapt the tool-specific setup patterns
 
-> **💡 Start here:** Begin with the [DevContainer README](https://github.com/KrijnvanderBurg/.devcontainer) to see hands-on examples, then explore the [Templates documentation](https://github.com/KrijnvanderBurg/.azuredevops) to understand how everything connects.
+> **💡 Start here:** Begin with the [DevContainers](.devcontainer/) to see hands-on examples, then explore the [Azure DevOps Templates](.azuredevops/) to understand how everything connects.

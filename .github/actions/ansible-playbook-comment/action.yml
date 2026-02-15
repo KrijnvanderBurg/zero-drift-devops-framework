@@ -1,0 +1,52 @@
+name: Ansible Playbook Comment
+description: Post Ansible playbook output as a PR comment
+
+inputs:
+  output_file:
+    description: Path to the playbook output file
+    required: true
+  artifact_name:
+    description: Display name for the deployment (e.g., op-base-infra-dev)
+    required: true
+  working_directory:
+    description: Path to the Ansible project directory
+    required: true
+  status:
+    description: Outcome of the playbook run (success, failure)
+    required: true
+  github_token:
+    description: GitHub token for posting PR comments
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Post playbook output to PR
+      if: github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        OUTPUT=""
+        if [ -f "${{ inputs.output_file }}" ]; then
+          OUTPUT=$(head -c 60000 "${{ inputs.output_file }}")
+        fi
+
+        STATUS_EMOJI="✅"
+        if [ "${{ inputs.status }}" != "success" ]; then
+          STATUS_EMOJI="❌"
+        fi
+
+        COMMENT="### ${STATUS_EMOJI} Ansible: \`${{ inputs.artifact_name }}\`
+        **Directory:** \`${{ inputs.working_directory }}\`
+        **Status:** \`${{ inputs.status }}\`
+
+        <details><summary>Output</summary>
+
+        \`\`\`
+        ${OUTPUT}
+        \`\`\`
+
+        </details>"
+
+        gh pr comment "${{ github.event.pull_request.number }}" --body "$COMMENT"

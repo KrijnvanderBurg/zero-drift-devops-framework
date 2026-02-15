@@ -21,16 +21,8 @@ parameters:
     type: string
     default: $(Build.Repository.LocalPath)/pyproject.toml
     
-resources:
-  repositories:
-    - repository: azuredevops
-      type: github
-      name: KrijnvanderBurg/.azuredevops
-      endpoint: KrijnvanderBurg
-      ref: feature/fix
-
 stages:
-  - template: /v1/pipelines/devops_toolkit.yaml@azuredevops
+  - template: /.azuredevops/pipelines/python.yaml
     parameters:
       pythonVersion: ${{ parameters.pythonVersion }}
       pythonSrcDirectory: ${{ parameters.pythonSrcDirectory }}

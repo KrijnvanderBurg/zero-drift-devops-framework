@@ -1,0 +1,9 @@
+[flake8]
+max-line-length = 120
+exclude = .git,__pycache__,docs/source/conf.py,old,build,dist,.venv,.devcontainer,.azuredevops
+max-complexity = 10
+show-source = true
+format = pylint
+ignore = W503,E701,E704
+# W503 line break before binary operator
+# E701,E701 multiple statements on one line colon / def ->  rule is triggered on using ... elipsis for abstractmethods

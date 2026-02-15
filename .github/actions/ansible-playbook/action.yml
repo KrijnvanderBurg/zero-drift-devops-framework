@@ -1,0 +1,55 @@
+name: Ansible Playbook
+description: Run ansible-playbook in check or apply mode
+
+inputs:
+  working_directory:
+    description: Path to the Ansible project directory containing site.yml
+    required: true
+  inventory:
+    description: Relative path to the inventory directory (e.g., inventories/dev)
+    required: true
+  mode:
+    description: "Execution mode: 'check' for dry-run (--check --diff), 'apply' for full run"
+    required: true
+    default: check
+  output_file:
+    description: Absolute path to save the playbook output
+    required: false
+    default: ''
+  vault_password:
+    description: Ansible Vault password for decrypting secrets
+    required: false
+    default: ''
+
+outputs:
+  playbook_output_file:
+    description: Path to the playbook output file
+    value: ${{ steps.playbook.outputs.playbook_output_file }}
+
+runs:
+  using: composite
+  steps:
+    - name: Write vault password file
+      if: inputs.vault_password != ''
+      shell: bash
+      run: |
+        echo "${{ inputs.vault_password }}" > "${{ runner.temp }}/vault-password.txt"
+        chmod 600 "${{ runner.temp }}/vault-password.txt"
+
+    - name: Run ansible-playbook
+      id: playbook
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      env:
+        INVENTORY: ${{ inputs.inventory }}
+        MODE: ${{ inputs.mode }}
+        OUTPUT_FILE: ${{ inputs.output_file }}
+        ANSIBLE_VAULT_PASSWORD_FILE: ${{ inputs.vault_password != '' && format('{0}/vault-password.txt', runner.temp) || '' }}
+      run: |
+        bash ${{ github.workspace }}/.github/scripts/ansible-playbook.sh
+
+    - name: Cleanup vault password file
+      if: always() && inputs.vault_password != ''
+      shell: bash
+      run: |
+        rm -f "${{ runner.temp }}/vault-password.txt"
