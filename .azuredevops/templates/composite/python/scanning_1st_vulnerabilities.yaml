@@ -1,0 +1,31 @@
+parameters:
+  - name: pythonSrcDirectory
+    type: string
+
+  - name: pythonProjectDirectory
+    type: string
+
+steps:
+  - template: ../../atomic/python/bandit.yaml
+    parameters:
+      targetPath: ${{ parameters.pythonProjectDirectory }}
+
+  - template: ../../atomic/python/semgrep.yaml
+    parameters:
+      targetPath: ${{ parameters.pythonProjectDirectory }}
+
+  - template: ../../atomic/python/trufflehog.yaml
+    parameters:
+      targetPath: ${{ parameters.pythonProjectDirectory }}
+
+  - template: ../../atomic/python/vulture.yaml
+    parameters:
+      targetPath: ${{ parameters.pythonProjectDirectory }}
+
+  - template: ../../atomic/python/devskim.yaml
+    parameters:
+      targetPath: ${{ parameters.pythonSrcDirectory }}
+
+  - template: ../../atomic/python/graudit.yaml
+    parameters:
+      targetPath: ${{ parameters.pythonSrcDirectory }}

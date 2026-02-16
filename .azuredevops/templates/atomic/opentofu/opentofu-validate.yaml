@@ -1,0 +1,19 @@
+# Requirements:
+# - OpenTofu is installed on pipeline agent
+# - opentofu init
+
+parameters:
+- name: openTofuDir
+  type: string
+
+- name: logLevel
+  type: string
+  default: INFO
+
+steps:
+- script: |
+    tofu validate
+  displayName: OpenTofu validate
+  workingDirectory: ${{ parameters.openTofuDir }}
+  env:
+    TF_LOG: ${{ parameters.logLevel }}

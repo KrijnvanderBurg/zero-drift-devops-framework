@@ -1,0 +1,21 @@
+# https://github.com/astral-sh/ruff
+# https://docs.astral.sh/ruff/
+
+# Requirements:
+# - Python version/architecture is set in pipeline
+
+parameters:
+- name: targetPath
+  type: string
+
+- name: configFilepath
+  type: string
+  default: $(Build.Repository.LocalPath)/.azuredevops/configs/python/ruff.toml
+
+steps:
+- script: |
+    sh $(Build.Repository.LocalPath)/.azuredevops/configs/python/scripts/ruff_linter.sh \
+      ${{ parameters.targetPath }} \
+      ${{ parameters.configFilepath }} 
+  displayName: Ruff (linter)
+  condition: always()

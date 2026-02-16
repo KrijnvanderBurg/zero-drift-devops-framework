@@ -1,0 +1,11 @@
+parameters:
+  - name: targetPath
+    type: string
+
+steps:
+  - script: |
+      sh $(Build.Repository.LocalPath)/.azuredevops/configs/python/scripts/poetry-install-pyproject.sh \
+        ${{ parameters.targetPath }}
+    displayName: Poetry install
+    env:
+      POETRY_VIRTUALENVS_CREATE: false

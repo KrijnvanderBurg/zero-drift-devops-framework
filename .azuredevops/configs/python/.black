@@ -1,0 +1,16 @@
+[tool.black]
+line-length = 120
+exclude = '''
+/(
+    \.venv
+    | build
+    | dist
+    | migrations
+    | __pycache__
+    | .*\.pyc
+    | .*\.pyo
+    | .*\.whl
+    | .devcontainer
+    | .azuredevops
+)/
+'''

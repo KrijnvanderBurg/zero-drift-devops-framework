@@ -1,0 +1,135 @@
+// https://containers.dev/implementors/json_reference/
+{
+    "name": "OpenTofu",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+    "remoteUser": "vscode",
+    "containerUser": "vscode",
+    //
+    // Features - https://containers.dev/implementors/features.
+    //
+    "features": {
+        "ghcr.io/devcontainers/features/azure-cli:1": {},
+        "ghcr.io/devcontainers/features/python:1": {
+            "toolsToInstall": "pipx"
+        }
+    },
+    //
+    // ContainerEnv
+    //
+    "containerEnv": {},
+    "onCreateCommand": {
+        "pre-commit-install": "pipx install pre-commit && pre-commit install",
+        "opentofu-install": "bash .github/scripts/opentofu-install.sh"
+    },
+    // "postCreateCommand": {},
+    // "postStartCommand": {},
+    // "postAttachCommand": {},
+    // "updateContentCommand": {},
+    // "waitFor": "", // default updateContentCommand
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                // Terraform
+                "hashicorp.terraform", // https://marketplace.visualstudio.com/items?itemName=HashiCorp.terraform
+            ],
+            "settings": {
+                //
+                // Add the extension IDs you want to suppress
+                //
+                "extensions.unwantedRecommendations": [],
+                //
+                // Git - search gitignore in parent monorepo folder
+                //
+                "git.openRepositoryInParentFolders": "always",
+                "search.useIgnoreFiles": true,
+                "search.useParentIgnoreFiles": true,
+                //
+                // tf files
+                //
+                "[terraform]": {
+                    "editor.defaultFormatter": "hashicorp.terraform",
+                    "editor.formatOnSave": true,
+                    "editor.codeActionsOnSave": {
+                        "source.formatAll.terraform": "explicit"
+                    }
+                },
+                //
+                // VsCode Tasks
+                //
+                "tasks": {
+                    // https://code.visualstudio.com/docs/editor/tasks#vscode
+                    "version": "2.0.0",
+                    "options": {},
+                    "tasks": [
+                        //
+                        // OpenTofu tasks
+                        //
+                        {
+                            "label": "opentofu init",
+                            "type": "shell",
+                            "command": "${workspaceFolder}/.github/scripts/opentofu-init.sh",
+                            "args": [],
+                            "group": "build",
+                            "presentation": {
+                                "reveal": "always",
+                                "panel": "shared"
+                            },
+                            "problemMatcher": []
+                        },
+                        {
+                            "label": "opentofu lint",
+                            "type": "shell",
+                            "command": "${workspaceFolder}/.github/scripts/opentofu-lint.sh",
+                            "args": [],
+                            "group": "build",
+                            "presentation": {
+                                "reveal": "always",
+                                "panel": "shared"
+                            },
+                            "problemMatcher": []
+                        },
+                        {
+                            "label": "opentofu plan",
+                            "type": "shell",
+                            "command": "${workspaceFolder}/.github/scripts/opentofu-plan.sh",
+                            "args": [],
+                            "group": "build",
+                            "dependsOn": [
+                                "opentofu init"
+                            ],
+                            "presentation": {
+                                "reveal": "always",
+                                "panel": "shared"
+                            },
+                            "problemMatcher": []
+                        },
+                        {
+                            "label": "opentofu apply",
+                            "type": "shell",
+                            "command": "${workspaceFolder}/.github/scripts/opentofu-apply.sh",
+                            "args": [],
+                            "group": "build",
+                            "presentation": {
+                                "reveal": "always",
+                                "panel": "shared"
+                            },
+                            "problemMatcher": []
+                        },
+                        {
+                            "label": "pre-commit run",
+                            "type": "shell",
+                            "command": "pre-commit run --all-files",
+                            "args": [],
+                            "group": "test",
+                            "presentation": {
+                                "reveal": "always",
+                                "panel": "shared"
+                            },
+                            "problemMatcher": []
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

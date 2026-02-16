@@ -1,0 +1,23 @@
+parameters:
+  - name: artifactName
+    type: string
+    default: opentofu
+
+  - name: openTofuPlanFilepath
+    type: string
+
+steps:
+  - checkout: none
+
+  - download: current
+    artifact: ${{ parameters.artifactName }}
+
+  - template: /.azuredevops/templates/atomic/opentofu/opentofu_install.yaml
+
+  - template: /.azuredevops/templates/atomic/opentofu/opentofu_init.yaml
+    parameters:
+      openTofuDir: $(Pipeline.Workspace)/${{ parameters.artifactName }}/${{ parameters.openTofuPlanFilepath }}
+
+  - template: /.azuredevops/templates/atomic/opentofu/opentofu_apply.yaml
+    parameters:
+      openTofuPlanFilepath: $(Pipeline.Workspace)/${{ parameters.artifactName }}/${{ parameters.openTofuPlanFilepath }}

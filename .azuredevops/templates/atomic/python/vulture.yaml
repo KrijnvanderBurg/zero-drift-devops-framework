@@ -1,0 +1,20 @@
+# https://github.com/jendrikseipp/vulture
+
+# Requirements:
+# - Python version/architecture is set in pipeline
+
+parameters:
+- name: targetPath
+  type: string
+
+- name: configFilepath
+  type: string
+  default: $(Build.Repository.LocalPath)/.azuredevops/configs/python/vulture.toml
+
+steps:
+- script: |
+    sh $(Build.Repository.LocalPath)/.azuredevops/configs/python/scripts/vulture.sh \
+      ${{ parameters.targetPath }} \
+      ${{ parameters.configFilepath }} 
+  displayName: Vulture (scanner)
+  condition: always()

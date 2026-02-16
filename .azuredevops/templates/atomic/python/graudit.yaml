@@ -1,0 +1,14 @@
+# https://github.com/wireghoul/graudit
+
+parameters:
+- name: targetPath
+  type: string
+
+steps:
+- script: | 
+    sh $(Build.Repository.LocalPath)/.azuredevops/configs/python/scripts/graudit.sh \
+      ${{ parameters.targetPath }} \
+  displayName: Graudit (scanner)
+  condition: always()
+  env:
+    GRDIR: $(Agent.ToolsDirectory)/graudit/signatures

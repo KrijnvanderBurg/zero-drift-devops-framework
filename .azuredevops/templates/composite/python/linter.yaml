@@ -1,0 +1,16 @@
+parameters:
+  - name: pythonSrcDirectory
+    type: string
+    
+steps:
+  - template: ../../atomic/python/ruff-linter.yaml
+    parameters:
+      targetPath: ${{ parameters.pythonSrcDirectory }}
+
+  - template: ../../atomic/python/pylint.yaml
+    parameters:
+      targetPath: ${{ parameters.pythonSrcDirectory }}
+
+  - template: ../../atomic/python/flake8.yaml
+    parameters:
+      targetPath: ${{ parameters.pythonSrcDirectory }}

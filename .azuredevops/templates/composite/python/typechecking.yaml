@@ -1,0 +1,16 @@
+parameters:
+  - name: pythonSrcDirectory
+    type: string
+    
+steps:
+  - template: ../../atomic/python/mypy.yaml
+    parameters:
+      targetPath: ${{ parameters.pythonSrcDirectory }}
+
+  - template: ../../atomic/python/pyre.yaml
+    parameters:
+      targetPath: ${{ parameters.pythonSrcDirectory }}
+
+  - template: ../../atomic/python/pyright.yaml
+    parameters:
+      targetPath: ${{ parameters.pythonSrcDirectory }}

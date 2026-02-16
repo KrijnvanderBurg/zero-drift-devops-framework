@@ -1,0 +1,24 @@
+parameters:
+  - name: openTofuDir
+    type: string
+
+  - name: openTofuPlanFilepath
+    type: string
+
+steps:
+  - checkout: self
+
+  - template: /.azuredevops/templates/atomic/opentofu/opentofu_install.yaml
+
+  - template: /.azuredevops/templates/atomic/opentofu/opentofu_init.yaml
+    parameters:
+      openTofuDir: ${{ parameters.openTofuDir }}
+
+  - template: /.azuredevops/templates/atomic/opentofu/opentofu_validate.yaml
+    parameters:
+      openTofuDir: ${{ parameters.openTofuDir }}
+
+  - template: /.azuredevops/templates/atomic/opentofu/opentofu_plan.yaml
+    parameters:
+      openTofuDir: ${{ parameters.openTofuDir }}
+      openTofuPlanFilepath: ${{ parameters.openTofuPlanFilepath }}

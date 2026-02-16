@@ -1,0 +1,20 @@
+# https://flake8.pycqa.org
+
+# Requirements:
+# - Python version/architecture is set in pipeline
+
+parameters:
+- name: targetPath
+  type: string
+
+- name: configFilepath
+  type: string
+  default: $(Build.Repository.LocalPath)/.azuredevops/configs/python/.flake8
+
+steps:
+- script: |
+    sh $(Build.Repository.LocalPath)/.azuredevops/configs/python/scripts/flake8.sh \
+      ${{ parameters.targetPath }} \
+      ${{ parameters.configFilepath }} 
+  displayName: Flake8 (linter)
+  condition: always()

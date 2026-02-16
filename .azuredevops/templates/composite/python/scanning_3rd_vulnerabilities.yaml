@@ -1,0 +1,12 @@
+parameters:
+- name: pythonPyprojectFilepath
+  type: string
+
+steps:
+  - template: ../../atomic/python/ossaudit.yaml
+    parameters:
+      pythonPyprojectFilepath: ${{ parameters.pythonPyprojectFilepath }}
+
+  # - template: ../../atomic/python/owasp.yaml
+  #   parameters:
+  #     pythonDependencyFilepath: ${{ parameters.pythonPyprojectFilepath }}

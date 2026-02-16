@@ -1,0 +1,27 @@
+parameters:
+- name: openTofuDir
+  type: string
+
+- name: logLevel
+  type: string
+  default: INFO
+
+steps:
+- task: AzureCLI@2
+  displayName: "Initialize Terraform with Backend"
+  inputs:
+    azureSubscription: pers-reg-dev-eu-krijn
+    scriptType: bash
+    addSpnToEnvironment: true
+    scriptLocation: inlineScript
+    inlineScript: |
+      export ARM_CLIENT_ID=$servicePrincipalId
+      export ARM_CLIENT_SECRET=$servicePrincipalKey
+
+      tofu init \
+        -backend-config="client_id=$ARM_CLIENT_ID" \
+        -backend-config="client_secret=$ARM_CLIENT_SECRET" \
+        -input=false
+    workingDirectory: ${{ parameters.openTofuDir }}
+  env:
+    TF_LOG: ${{ parameters.logLevel }}
