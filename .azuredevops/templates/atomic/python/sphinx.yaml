@@ -1,0 +1,20 @@
+# https://www.sphinx-doc.org/en/master/
+
+parameters:
+- name: pythonProjectDocsDirectory
+  type: string
+
+- name: pythonProjectDocsBuildHtmlDirectory
+  type: string
+
+steps:
+- script: |
+    sh $(Build.Repository.LocalPath)/.azuredevops/configs/python/scripts/sphinx.sh \
+      ${{ parameters.pythonProjectDocsDirectory }} 
+  displayName: Sphinx (docs)
+
+- publish: ${{ parameters.pythonProjectDocsBuildHtmlDirectory }}
+  displayName: Publish docs html
+  artifact: docs_html
+
+# add your own tasks to publish the documentation further

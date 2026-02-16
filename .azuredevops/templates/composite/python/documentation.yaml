@@ -1,0 +1,12 @@
+parameters:
+- name: pythonProjectDocsDirectory
+  type: string
+
+- name: pythonProjectDocsBuildHtmlDirectory
+  type: string
+    
+steps:
+- template: ../../atomic/python/sphinx.yaml
+  parameters:
+    pythonProjectDocsDirectory: ${{ parameters.pythonProjectDocsDirectory }}
+    pythonProjectDocsBuildHtmlDirectory: ${{ parameters.pythonProjectDocsBuildHtmlDirectory }}

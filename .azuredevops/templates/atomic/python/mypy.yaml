@@ -1,0 +1,20 @@
+# https://mypy-lang.org/
+
+# Requirements:
+# - Python version/architecture is set in pipeline
+
+parameters:
+- name: targetPath
+  type: string
+
+- name: configFilepath
+  type: string
+  default: $(Build.Repository.LocalPath)/.azuredevops/configs/python/mypy.ini
+
+steps:
+- script: |
+    sh $(Build.Repository.LocalPath)/.azuredevops/configs/python/scripts/mypy.sh \
+      ${{ parameters.targetPath }} \
+      ${{ parameters.configFilepath }} 
+  displayName: Mypy (type-checker)
+  condition: always()

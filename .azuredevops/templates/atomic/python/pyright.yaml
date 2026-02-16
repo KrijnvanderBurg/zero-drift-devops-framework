@@ -1,0 +1,22 @@
+# https://github.com/microsoft/pyright
+
+# Note: Pyright has no option in CLI to specify which directory to check, it has to be set in te config.
+
+# Requirements:
+# - Python version/architecture is set in pipeline
+
+parameters:
+- name: targetPath
+  type: string
+
+- name: configFilepath
+  type: string
+  default: $(Build.Repository.LocalPath)/.azuredevops/configs/python/pyrightconfig.json
+
+steps:
+- script: |
+    sh $(Build.Repository.LocalPath)/.azuredevops/configs/python/scripts/pyright.sh \
+      ${{ parameters.targetPath }} \
+      ${{ parameters.configFilepath }} 
+  displayName: Pyright (type-checker)
+  condition: always()

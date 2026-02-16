@@ -1,0 +1,27 @@
+# https://pyre-check.org
+
+# Requirements:
+# - Python version/architecture is set in pipeline'
+
+# Pyre doesn't support ignoring errors via configuration. Use inline comments:
+# Single line: # pyre-ignore[16]
+# Whole file: # pyre-ignore-all-errors[56] at the file's top
+
+# Pysa, a static analysis tool in Pyre, isn't supported in this template as it needs additional .pysa models
+parameters:
+- name: targetPath
+  type: string
+
+- name: configFilepath
+  type: string
+  default: "${workspaceFolder}/.azuredevops/configs/python/.pyre_configuration"
+
+steps:
+- script: |
+    sh $(Build.Repository.LocalPath)/.azuredevops/configs/python/scripts/pyre.sh \
+      ${{ parameters.targetPath }} \
+      ${{ parameters.configFilepath }} \
+  displayName: Pyre (type-checker)
+  timeoutInMinutes: 5 # Set timeout in case tool expects manual input and runs forever.
+  condition: always()
+  continueOnError: true # Pyre is impossible to fix all errors, so we allow the pipeline to continue even if it fails.

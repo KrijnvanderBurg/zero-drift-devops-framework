@@ -1,0 +1,56 @@
+variables:
+  - name: pythonVersion
+    value: 3.12
+    readonly: true
+
+  - name: pythonArchitecture
+    value: x64
+    readonly: true
+
+  - name: pythonSrcDirectory
+    value: $(Build.Repository.LocalPath)/hello_world/src
+    readonly: true
+
+  - name: pythonProjectDirectory
+    value: $(Build.Repository.LocalPath)/hello_world
+    readonly: true
+
+  - name: pythonProjectDocsDirectory
+    value: $(Build.Repository.LocalPath)/hello_world/docs
+    readonly: true
+
+  - name: pythonProjectDocsBuildHtmlDirectory
+    value: $(Build.Repository.LocalPath)/hello_world/docs/build/html
+    readonly: true
+
+  - name: pythonProjectRuntimeDirectory
+    value: $(Build.Repository.LocalPath)/hello_world/runtime
+    readonly: true
+
+  - name: pythonPyprojectFilepath
+    value: $(Build.Repository.LocalPath)/hello_world/pyproject.toml
+    readonly: true
+
+  - name: pythonUnitTestsPaths
+    value: $(Build.Repository.LocalPath)/hello_world/tests
+    readonly: true
+
+  - name: PythonIntegrationtestsPaths
+    value: $(Build.Repository.LocalPath)/hello_world/tests/integration
+    readonly: true
+
+  - name: PythonE2etestsPaths
+    value: $(Build.Repository.LocalPath)/hello_world/tests/e2e
+    readonly: true
+
+  - name: devopsOrganisationName
+    value: leevendaal
+    readonly: true
+
+  - name: artifactsFeedName
+    value: leevendaal
+    readonly: true
+
+  - name: artifactsFeedView
+    value: Release
+    readonly: true

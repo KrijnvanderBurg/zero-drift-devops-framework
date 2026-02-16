@@ -1,0 +1,29 @@
+parameters:
+  - name: openTofuDir
+    type: string
+
+  - name: openTofuPlanFilepath
+    type: string
+
+stages:
+  - stage: ValidateAndPlan
+    displayName: Validate and Plan
+    jobs:
+      - job: OpenTofuValidateAndPlan
+        displayName: Validate and Plan
+        steps:
+          - template: /.azuredevops/templates/composite/opentofu/validate_and_plan.yaml
+            parameters:
+              openTofuDir: ${{ parameters.openTofuDir }}
+              openTofuPlanFilepath: ${{ parameters.openTofuPlanFilepath }}
+
+  - stage: ApplyStage
+    displayName: Apply 
+    dependsOn: ValidateAndPlan
+    jobs:
+      - job: OpenTofuApply
+        displayName: Apply
+        steps:
+          - template: /.azuredevops/templates/composite/opentofu/apply.yaml
+            parameters:
+              openTofuPlanFilepath: ${{ parameters.openTofuPlanFilepath }}

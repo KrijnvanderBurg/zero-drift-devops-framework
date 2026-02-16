@@ -1,0 +1,39 @@
+# https://semgrep.dev/docs/cli-reference/
+# https://semgrep.dev/docs/semgrep-ci/sample-ci-configs
+
+# Requirements:
+# - Python version/architecture is set in pipeline
+
+parameters:
+- name: targetPath
+  type: string
+
+- name: configFilepath
+  type: string
+  default: $(Build.Repository.LocalPath)/.azuredevops/configs/python/semgrep.yaml
+
+steps:
+# when using -o to output to file, then no details are shown in the console
+- script: |
+    sh $(Build.Repository.LocalPath)/.azuredevops/configs/python/scripts/semgrep.sh \
+      ${{ parameters.targetPath }} \
+      ${{ parameters.configFilepath }} \
+      $(Common.TestResultsDirectory)/semgrep-junit.xml
+  displayName: 'Semgrep [Limited] (scanner)' # Limited because Semgrep is a paid tool with free version, paid version checks against more vulnerabilities.
+  condition: always()
+  env:
+    SEMGREP_JOB_URL: $(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)
+    SEMGREP_COMMIT: $(Build.SourceVersion)
+    SEMGREP_BRANCH: $(Build.SourceBranchName)
+    SEMGREP_REPO_URL: $(Build.Repository.Uri)
+    SEMGREP_REPO_NAME: $(Build.Repository.Name)
+
+# Semgrep does not create a junit xml file if no vulnerabilities were found.
+# Any warning regarding missing junit file while no vulnerabilities were found can be ignored.
+- task: PublishTestResults@2
+  displayName: Semgrep publish results
+  condition: always()
+  inputs:
+    testResultsFormat: JUnit
+    testResultsFiles: $(Common.TestResultsDirectory)/semgrep-junit.xml
+    testRunTitle: Semgrep results

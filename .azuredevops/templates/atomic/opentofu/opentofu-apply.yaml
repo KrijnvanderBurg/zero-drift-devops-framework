@@ -1,0 +1,30 @@
+# Requirements:
+# - OpenTofu is installed on pipeline agent
+# - opentofu init
+
+parameters:
+- name: openTofuPlanFilepath
+  type: string
+
+- name: logLevel
+  type: string
+  default: WARN
+
+steps:
+- script: |
+    tofu show ${{ parameters.openTofuPlanFilepath }}
+  displayName: OpenTofu show
+  env:
+    TF_LOG: ${{ parameters.logLevel }}
+
+- task: AzureCLI@2
+  displayName: OpenTofu apply
+  inputs:
+    azureSubscription: pers-reg-dev-eu-krijn
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      tofu apply ${{ parameters.openTofuPlanFilepath }} \
+        -input=false
+  env:
+    TF_LOG: ${{ parameters.logLevel }}

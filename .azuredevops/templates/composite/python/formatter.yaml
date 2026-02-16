@@ -1,0 +1,16 @@
+parameters:
+  - name: pythonSrcDirectory
+    type: string
+    
+steps:
+- template: ../../atomic/python/black.yaml
+  parameters:
+    targetPath: ${{ parameters.pythonSrcDirectory }}
+
+- template: ../../atomic/python/isort.yaml
+  parameters:
+    targetPath: ${{ parameters.pythonSrcDirectory }}
+
+- template: ../../atomic/python/ruff-formatter.yaml
+  parameters:
+    targetPath: ${{ parameters.pythonSrcDirectory }}

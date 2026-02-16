@@ -1,0 +1,23 @@
+# Poetry installation script template
+
+parameters:
+- name: targetPath
+  type: string
+  default: $(Build.Repository.LocalPath)
+
+- name: poetryHome
+  type: string
+  default: $(Agent.WorkFolder)/poetry/
+
+- name: poetryCacheDirectory
+  type: string
+  default: $(Agent.WorkFolder)/.cache/pypoetry/
+
+steps:
+- script: |
+    sh $(Build.Repository.LocalPath)/.azuredevops/configs/python/scripts/poetry-install-pyproject.sh \
+      ${{ parameters.targetPath }} \
+      ${{ parameters.poetryHome }} \
+      ${{ parameters.poetryCacheDirectory }}
+  displayName: Poetry Install
+  condition: always()

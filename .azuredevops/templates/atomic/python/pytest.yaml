@@ -1,0 +1,33 @@
+# https://docs.pytest.org
+
+# Requirements:
+# - Python version/architecture is set in pipeline
+
+parameters:
+- name: testsPaths
+  type: string
+
+- name: coveragePath
+  type: string
+
+- name: pytestConfigFilepath
+  type: string
+  default: $(Build.Repository.LocalPath)/.azuredevops/configs/python/pytest.ini
+
+- name: coverageConfigFilepath
+  type: string
+  default: $(Build.Repository.LocalPath)/.azuredevops/configs/python/.coveragerc
+
+steps:
+- script: |
+    pip install pytest-azurepipelines --quiet
+
+    sh $(Build.Repository.LocalPath)/.azuredevops/configs/python/scripts/pytest_and_coverage.sh \
+      ${{ parameters.testsPaths }} \
+      $${{ parameters.coveragePath }} \
+      ${{ parameters.pytestConfigFilepath }} \
+      ${{ parameters.coverageConfigFilepath }} \
+      $(Build.StagingDirectory)/coverage.xml \
+      $(Build.StagingDirectory)/JUNIT-TEST.xml
+  displayName: Pytest (testing)
+  condition: always()
